@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <title>JLO Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        #intro {
+            margin: 20px;
+        }
+
+        #imageContainer1,
+        #imageContainer2 {
+            margin: 20px;
+            display: none;
+            /* Initially hidden */
+        }
+
+        button {
+            margin: 5px;
+            padding: 10px 20px;
+        }
+
+        .selected {
+            background-color: grey;
+            /* Color when selected */
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #proceedButton1,
+        #proceedButton2 {
+            display: none;
+            position: absolute;
+            /* 绝对定位按钮 */
+            bottom: 10px;
+            /* 距离容器底部10px */
+            right: 10px;
+            /* 距离容器右侧10px */
+            display: none;
+            /* 初始隐藏 */
+            /* 允许元素在必要时换行 */
+            /* Hidden initially */
+        }
+    </style>
+</head>
+
+<body>
+    <div id="intro">
+        <h1>线条定向判断测试</h1>
+        <p>请点击下方按钮选择每个线条对应的正确编号。每张图您只可以选择两次。</p>
+        <button id="startButton" onclick="startTest()">开始测试</button>
+    </div>
+
+    <div id="imageContainer1" class="imageContainer hidden">
+        <img src="test.png" alt="JLO Test Image 1">
+        <div id="buttons1">
+            <button onclick="recordChoice(1, 'test1', this)">1</button>
+            <button onclick="recordChoice(2, 'test1', this)">2</button>
+            <button onclick="recordChoice(3, 'test1', this)">3</button>
+            <button onclick="recordChoice(4, 'test1', this)">4</button>
+            <button onclick="recordChoice(5, 'test1', this)">5</button>
+            <button onclick="recordChoice(6, 'test1', this)">6</button>
+            <button onclick="recordChoice(7, 'test1', this)">7</button>
+            <button onclick="recordChoice(8, 'test1', this)">8</button>
+            <button onclick="recordChoice(9, 'test1', this)">9</button>
+            <button onclick="recordChoice(10, 'test1', this)">10</button>
+            <button onclick="recordChoice(11, 'test1', this)">11</button>
+            <!-- Repeat for other numbers as necessary -->
+            <button id="proceedButton1" onclick="proceedToNextTest()" class="hidden">继续测试</button>
+
+        </div>
+    </div>
+
+    <div id="imageContainer2" class="imageContainer hidden">
+        <img src="test2.png" alt="JLO Test Image 2">
+        <div id="buttons2">
+            <button onclick="recordChoice(1, 'test2', this)">1</button>
+            <button onclick="recordChoice(2, 'test2', this)">2</button>
+            <button onclick="recordChoice(3, 'test2', this)">3</button>
+            <button onclick="recordChoice(4, 'test2', this)">4</button>
+            <button onclick="recordChoice(5, 'test2', this)">5</button>
+            <button onclick="recordChoice(6, 'test2', this)">6</button>
+            <button onclick="recordChoice(7, 'test2', this)">7</button>
+            <button onclick="recordChoice(8, 'test2', this)">8</button>
+            <button onclick="recordChoice(9, 'test2', this)">9</button>
+            <button onclick="recordChoice(10, 'test2', this)">10</button>
+            <button onclick="recordChoice(11, 'test2', this)">11</button>
+            <!-- Repeat for other numbers as necessary -->
+            <button id="proceedButton2" onclick="proceedToNextTest()" class="hidden">完成测试</button>
+        </div>
+    </div>
+
+
+    <script>
+        let scores = { test1: 0, test2: 0 };
+        let attempts = { test1: 0, test2: 0 };
+        let correctAnswers = { test1: [3, 6], test2: [2, 7] }; // example correct answers
+        let currentTest = 'test1'; // Keeps track of the current test
+
+        function startTest() {
+            document.getElementById('startButton').style.display = 'none';
+            document.getElementById('imageContainer1').style.display = 'block';
+        }
+
+        function recordChoice(choice, test, element) {
+            if (!element.classList.contains('selected')) {
+                if (attempts[test] < 2) { // Only allow selection if attempts are less than 2
+                    element.classList.add('selected');
+                    attempts[test]++;
+                    if (correctAnswers[test].includes(choice)) {
+                        scores[test] += 1;
+                    }
+                }
+            } else {
+                element.classList.remove('selected');
+                attempts[test]--;
+                if (correctAnswers[test].includes(choice)) {
+                    scores[test] -= 1; // Deduct point if deselected number was correct
+                }
+            }
+
+            // Check if it's time to show the proceed button
+            if (attempts[test] === 2) {
+                document.getElementById(test === 'test1' ? 'proceedButton1' : 'proceedButton2').style.display = 'block';
+            } else {
+                document.getElementById(test === 'test1' ? 'proceedButton1' : 'proceedButton2').style.display = 'none';
+            }
+        }
+
+        function proceedToNextTest() {
+            if (currentTest === 'test1') {
+                document.getElementById('imageContainer1').style.display = 'none';
+                document.getElementById('imageContainer2').style.display = 'block';
+                currentTest = 'test2'; // Update current test
+                document.getElementById('proceedButton1').style.display = 'none'; // Hide proceed button until selections made
+            } else {
+                generateCSV();
+            }
+        }
+
+        function generateCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Test 1,Test 2\r\n";
+            csvContent += scores.test1 + "," + scores.test2 + "\r\n";
+            var encodedUri = encodeURI(csvContent);
+            var link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "jlo_test_results.csv");
+            document.body.appendChild(link);
+            link.click();
+        }
+    </script>
+</body>
+
+</html>

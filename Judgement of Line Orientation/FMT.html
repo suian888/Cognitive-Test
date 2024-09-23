@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Figure Memory Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #fff;
+            text-align: center;
+            padding: 20px;
+        }
+        .image-container {
+            margin: 10px;
+        }
+        img {
+            width: 100px; /* Adjust size as necessary */
+            height: auto;
+            margin: 10px;
+            border: 1px solid #ddd; /* Light grey border */
+            border-radius: 4px; /* Rounded border */
+            padding: 5px; /* Some padding */
+        }
+        #result {
+            font-size: 20px;
+            color: green;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Figure Memory Test</h1>
+    <div id="image-container" class="image-container"></div>
+    <button onclick="startTest()">Start Test</button>
+    <div id="result"></div>
+
+    <script>s
+        const images = [
+            'image1.jpg', 'image2.jpg', 'image3.jpg', 'image4.jpg',
+            'image5.jpg', 'image6.jpg', 'image7.jpg', 'image8.jpg'
+        ];
+        const displayDuration = 3000; // 3 seconds to memorize images
+
+        function startTest() {
+            document.getElementById('result').innerHTML = ''; // Clear previous results
+            let shuffled = shuffle(images);
+            let selectedImages = shuffled.slice(0, 3); // Select three random images to show
+            let testImage = shuffled[4]; // One image to test memory
+
+            showImages(selectedImages);
+
+            setTimeout(() => {
+                document.getElementById('image-container').innerHTML = '';
+                showImage(testImage); // Show the test image
+                setTimeout(() => {
+                    let wasShown = selectedImages.includes(testImage);
+                    document.getElementById('result').innerHTML = wasShown ? 
+                        'This image was shown.' : 'This image was NOT shown.';
+                }, displayDuration);
+            }, displayDuration);
+        }
+
+        function showImages(images) {
+            images.forEach(image => {
+                showImage(image);
+            });
+        }
+
+        function showImage(image) {
+            let imgElement = document.createElement('img');
+            imgElement.src = image;
+            document.getElementById('image-container').appendChild(imgElement);
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                let j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+            }
+            return array;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Interactive Line Drawing</title>
+    <style>
+        body,
+        html {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #f0f0f0;
+        }
+
+        #myCanvas {
+            width: 300px;
+            height: 300px;
+            border: 1px solid black;
+            display: block;
+            background: #fff;
+            cursor: pointer;
+        }
+
+        #controls {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        #imageContainer {
+            display: block;
+        }
+
+        #imageContainer img {
+            display: none;
+            /* Hide all images initially */
+            max-width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="imageContainer">
+        <img src="figure1.jpg" alt="Image 1">
+        <img src="figure2.jpg" alt="Image 2">
+        <img src="figure3.jpg" alt="Image 3">
+    </div>
+
+    <div>
+        <canvas id="myCanvas" width="300" height="300"></canvas>
+        <div id="controls">
+            <button onclick="clearCanvas()">Clear Lines</button>
+            <button id="continueButton" onclick="continueTest()">Continue</button>
+            <button id="downloadButton" style="display:none;" onclick="downloadCSV()">Download CSV</button>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Variables for image display
+            const imageContainer = document.getElementById('imageContainer');
+            const images = imageContainer.getElementsByTagName('img');
+            let currentImageIndex = 0;
+            const canvas = document.getElementById('myCanvas');
+            const controls = document.getElementById('controls');
+
+            // Show images one by one
+            function showNextImage() {
+                if (currentImageIndex > 0) {
+                    images[currentImageIndex - 1].style.display = 'none'; // Hide the previous image
+                }
+                if (currentImageIndex < images.length) {
+                    images[currentImageIndex].style.display = 'block'; // Show the next image
+                    currentImageIndex++;
+                    setTimeout(showNextImage, 3000); // Call this function again in 3 seconds
+                } else {
+                    imageContainer.style.display = 'none'; // Hide the image container after all images are shown
+                    canvas.style.display = 'block'; // Show the canvas
+                    controls.style.display = 'block'; // Show the controls
+                }
+            }
+
+            setTimeout(showNextImage, 0); // Start showing images immediately
+
+            const ctx = canvas.getContext('2d');
+            const continueButton = document.getElementById('continueButton');
+            const downloadButton = document.getElementById('downloadButton');
+            let currentRound = 1;
+            const maxRounds = 3;
+            let results = [];
+
+            const lines = [
+                { number: 1, start: [0, 0], end: [150, 150], visible: false },
+                { number: 2, start: [150, 0], end: [150, 150], visible: false },
+                { number: 3, start: [300, 0], end: [150, 150], visible: false },
+                { number: 4, start: [300, 150], end: [150, 150], visible: false },
+                { number: 5, start: [300, 300], end: [150, 150], visible: false },
+                { number: 6, start: [150, 300], end: [150, 150], visible: false },
+                { number: 7, start: [0, 300], end: [150, 150], visible: false },
+                { number: 8, start: [0, 150], end: [150, 150], visible: false }
+            ];
+
+            function drawLine(line, color = 'black') {
+                ctx.beginPath();
+                ctx.moveTo(...line.start);
+                ctx.lineTo(...line.end);
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            function toggleLine(x, y) {
+                lines.forEach(line => {
+                    if (isNearLine(x, y, line.start, line.end, 10)) {
+                        line.visible = !line.visible;
+                        redrawCanvas();
+                    }
+                });
+            }
+
+            function isNearLine(x, y, start, end, tolerance) {
+                const [x1, y1] = start;
+                const [x2, y2] = end;
+                const px = x - x1;
+                const py = y - y1;
+                const vx = x2 - x1;
+                const vy = y2 - y1;
+                const AB = Math.sqrt(vx * vx + vy * vy);
+                const t = (px * vx + py * vy) / (AB * AB);
+
+                if (t < 0) return Math.sqrt(px * px + py * py) <= tolerance;
+                if (t > 1) {
+                    const dx = x - x2;
+                    const dy = y - y2;
+                    return Math.sqrt(dx * dx + dy * dy) <= tolerance;
+                }
+
+                const perpendicularDist = Math.abs(vy * px - vx * py) / AB;
+                return perpendicularDist <= tolerance;
+            }
+
+            function redrawCanvas() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                lines.forEach(line => {
+                    if (line.visible) drawLine(line);
+                });
+            }
+
+            function clearCanvas() {
+                lines.forEach(line => line.visible = false);
+                redrawCanvas();
+            }
+
+            function continueTest() {
+                results.push(lines.filter(line => line.visible).map(line => line.number));
+                if (currentRound < maxRounds) {
+                    currentRound++;
+                    clearCanvas();
+                } else {
+                    continueButton.style.display = 'none';
+                    downloadButton.style.display = 'inline';
+                }
+            }
+
+            function downloadCSV() {
+                let csvContent = "Round,Lines Selected\n";
+                results.forEach((roundResult, index) => {
+                    csvContent += `Round ${index + 1},${roundResult.join(';')}\n`;
+                });
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'test_results.csv';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            }
+
+            canvas.addEventListener('click', function (event) {
+                const rect = canvas.getBoundingClientRect();
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
+                toggleLine(x, y);
+            });
+
+            window.clearCanvas = clearCanvas;
+            window.continueTest = continueTest;
+            window.downloadCSV = downloadCSV;
+        });
+    </script>
+</body>
+
+</html>

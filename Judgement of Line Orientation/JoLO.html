@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>JLO Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        #imageContainer {
+            margin: 20px;
+        }
+        button {
+            margin: 5px;
+            padding: 10px 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>线条定向判断测试</h1>
+    <p>请点击下方按钮选择每个线条对应的正确编号。您只可以选择两次。</p>
+    <div id="imageContainer">
+        <img src="test.png" alt="JLO Test Image">
+    </div>
+    <div id="buttons">
+        <button onclick="recordChoice(1)">1</button>
+        <button onclick="recordChoice(2)">2</button>
+        <button onclick="recordChoice(3)">3</button>
+        <button onclick="recordChoice(4)">4</button>
+        <button onclick="recordChoice(5)">5</button>
+        <button onclick="recordChoice(6)">6</button>
+        <button onclick="recordChoice(7)">7</button>
+        <button onclick="recordChoice(8)">8</button>
+        <button onclick="recordChoice(9)">9</button>
+        <button onclick="recordChoice(10)">10</button>
+        <button onclick="recordChoice(11)">11</button>
+    </div>
+    <script>
+        let score = 0;
+        let attempts = 0;
+
+        function recordChoice(choice) {
+            attempts++;
+            if (choice === 3 || choice === 6) {
+                alert('正确！您选择的编号是: ' + choice);
+                score += 1;
+            } else {
+                alert('错误！您选择的编号是: ' + choice);
+            }
+
+            if (attempts >= 2) {
+                alert('您已完成游戏！');
+                generateCSV();
+            }
+        }
+
+        function generateCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Score\\r\\n" + score + "\\r\\n";
+            var encodedUri = encodeURI(csvContent);
+            var link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "jlo_test_results.csv");
+            document.body.appendChild(link);
+            link.click();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>记忆绘画测试与线条互动</title>
+<style>
+    body, html {
+        height: 100%;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #f0f0f0;
+    }
+    #canvas {
+        width: 300px;
+        height: 300px;
+        border: 1px solid black;
+        background: #fff;
+        cursor: pointer;
+    }
+    #controls {
+        margin-top: 10px;
+        text-align: center;
+    }
+    .hidden {
+        display: none;
+    }
+</style>
+</head>
+<body>
+<canvas id="canvas" width="300" height="300"></canvas>
+<div id="controls">
+    <button id="startButton" onclick="startTest()">显示图片</button>
+    <button id="continueButton" onclick="continueTest()" disabled>继续</button>
+</div>
+<img id="image1" class="hidden" src="figure1.png" alt="记忆测试图片1">
+<img id="image2" class="hidden" src="figure2.png" alt="记忆测试图片2">
+<img id="image3" class="hidden" src="figure3.png" alt="记忆测试图片3">
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const startButton = document.getElementById('startButton');
+    const continueButton = document.getElementById('continueButton');
+    let currentImageIndex = 0;
+    const images = [
+        document.getElementById('image1'),
+        document.getElementById('image2'),
+        document.getElementById('image3')
+    ];
+    const lines = [
+        {start: [0, 0], end: [150, 150], visible: false},
+        {start: [150, 150], end: [300, 300], visible: false},
+        {start: [300, 0], end: [150, 150], visible: false},
+        {start: [150, 150], end: [0, 300], visible: false},
+        {start: [150, 0], end: [150, 150], visible: false},
+        {start: [150, 150], end: [150, 300], visible: false},
+        {start: [0, 150], end: [150, 150], visible: false},
+        {start: [150, 150], end: [300, 150], visible: false}
+    ];
+
+    function startTest() {
+        images[currentImageIndex].classList.remove('hidden');
+        startButton.disabled = true;
+        continueButton.disabled = false;
+        redrawCanvas();
+    }
+
+    function continueTest() {
+        if (currentImageIndex < images.length - 1) {
+            images[currentImageIndex].classList.add('hidden'); // Hide current image
+            currentImageIndex++;
+            images[currentImageIndex].classList.remove('hidden'); // Show next image
+            clearCanvasLines(); // Clear lines to start fresh for the next image
+            redrawCanvas();
+        } else {
+            images[currentImageIndex].classList.add('hidden'); // Hide last image
+            continueButton.textContent = '结束'; // Change button text to "End"
+            continueButton.disabled = true; // Disable the continue button at the end
+            alert('测试结束'); // Notify end of the test
+        }
+    }
+
+    function clearCanvasLines() {
+        lines.forEach(line => line.visible = false);
+    }
+
+    function toggleLine(x, y) {
+        lines.forEach((line) => {
+            if (isNearLine(x, y, line.start, line.end, 10)) {
+                line.visible = !line.visible;
+                redrawCanvas();
+            }
+        });
+    }
+
+    function isNearLine(x, y, start, end, tolerance) {
+        const [x1, y1] = start;
+        const [x2, y2] = end;
+        const px = x - x1;
+        const py = y - y1;
+        const vx = x2 - x1;
+        const vy = y2 - y1;
+        const AB = Math.sqrt(vx * vx + vy * vy);
+        const t = (px * vx + py * vy) / (AB * AB);
+        const perpendicularDist = Math.abs(vy * px - vx * py) / AB;
+        return t >= 0 && t <= 1 && perpendicularDist <= tolerance;
+    }
+
+    function redrawCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        lines.forEach((line) => {
+            if (line.visible) drawLine(line);
+        });
+    }
+
+    function drawLine(line, color='black') {
+        ctx.beginPath();
+        ctx.moveTo(...line.start);
+        ctx.lineTo(...line.end);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    }
+
+    canvas.addEventListener('click', function(event) {
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        toggleLine(x, y);
+    });
+});
+</script>
+</body>
+</html>

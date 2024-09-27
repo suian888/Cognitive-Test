@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Countdown Timer</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        #countdown {
+            font-size: 10rem;
+        }
+        #continueButton {
+            display: none;
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #continueButton:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <div id="countdown">03:00</div>
+        <button id="continueButton" onclick="continueToNextSection()">Continue</button>
+    </div>
+
+    <script>
+        let timeLeft = 180; // 3 minutes in seconds
+        const countdownElement = document.getElementById('countdown');
+        const continueButton = document.getElementById('continueButton');
+
+        const countdownTimer = setInterval(() => {
+            if (timeLeft <= 0) {
+                clearInterval(countdownTimer);
+                continueButton.style.display = 'block';
+            } else {
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                countdownElement.textContent = 
+                    `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                timeLeft--;
+            }
+        }, 1000);
+
+        function continueToNextSection() {
+            // Logic to proceed to the next section
+            alert("Proceeding to the next section!");
+        }
+    </script>
+</body>
+</html>

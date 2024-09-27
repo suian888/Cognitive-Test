@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <title>JLO Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        #intro {
+            margin: 20px;
+        }
+
+        .imageContainer {
+            margin: 20px;
+            display: none;
+        }
+
+        button {
+            margin: 5px;
+            padding: 10px 20px;
+        }
+
+        .selected {
+            background-color: grey;
+            /* Color when selected */
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .proceedButton {
+            display: none;
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="intro">
+        <h1>线条定向判断测试</h1>
+        <p>请点击下方按钮选择每个线条对应的正确编号。每张图您只可以选择两次。</p>
+        <button id="startButton" onclick="startTest()">开始测试</button>
+    </div>
+
+    <div id="testContainers">
+        <!-- Image containers will be dynamically generated here -->
+    </div>
+
+    <script>
+        let numOfTests = 20;
+        let scores = {};
+        let attempts = {};
+        let correctAnswers = {};
+        let currentTestIndex = 0;
+        correctAnswers = {
+            test1: [3, 6],
+            test2: [2, 7]
+            <!-- Put the correct answers here! -->
+        }
+
+        for (let i = 1; i <= numOfTests; i++) {
+            scores[`test${i}`] = 0;
+            attempts[`test${i}`] = 0;
+        }
+
+        function startTest() {
+            document.getElementById('startButton').style.display = 'none';
+            document.getElementById(`imageContainer1`).style.display = 'block';
+        }
+
+        function createTestContainers() {
+            const container = document.getElementById('testContainers');
+
+            for (let i = 1; i <= numOfTests; i++) {
+                let imageContainer = document.createElement('div');
+                imageContainer.id = `imageContainer${i}`;
+                imageContainer.className = 'imageContainer';
+                imageContainer.innerHTML = `
+                    <img src="test${i}.png" alt="JLO Test Image ${i}">
+                    <div id="buttons${i}">
+                        ${createButtons(i)}
+                        <button id="proceedButton${i}" class="proceedButton hidden" onclick="proceedToNextTest(${i})">继续测试</button>
+                    </div>
+                `;
+                container.appendChild(imageContainer);
+            }
+        }
+
+        function createButtons(testNum) {
+            let buttonsHTML = '';
+            for (let j = 1; j <= 11; j++) {
+                buttonsHTML += `<button onclick="recordChoice(${j}, 'test${testNum}', this)"> ${j} </button>`;
+            }
+            return buttonsHTML;
+        }
+
+        function recordChoice(choice, test, element) {
+            if (!element.classList.contains('selected')) {
+                if (attempts[test] < 2) {
+                    element.classList.add('selected');
+                    attempts[test]++;
+                    if (correctAnswers[test].includes(choice)) {
+                        scores[test] += 1;
+                    }
+                }
+            } else {
+                element.classList.remove('selected');
+                attempts[test]--;
+                if (correctAnswers[test].includes(choice)) {
+                    scores[test] -= 1;
+                }
+            }
+
+            // Check if it's time to show the proceed button
+            if (attempts[test] === 2) {
+                document.getElementById(`proceedButton${currentTestIndex + 1}`).style.display = 'block';
+            } else {
+                document.getElementById(`proceedButton${currentTestIndex + 1}`).style.display = 'none';
+            }
+        }
+
+        function proceedToNextTest(testNum) {
+            document.getElementById(`imageContainer${testNum}`).style.display = 'none';
+            currentTestIndex++;
+
+            if (currentTestIndex < numOfTests) {
+                document.getElementById(`imageContainer${currentTestIndex + 1}`).style.display = 'block';
+            } else {
+                generateCSV();
+            }
+        }
+
+        function generateCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Test,Score\r\n";
+            for (let i = 1; i <= numOfTests; i++) {
+                csvContent += `Test ${i},${scores[`test${i}`]}\r\n`;
+            }
+            var encodedUri = encodeURI(csvContent);
+            var link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "jlo_test_results.csv");
+            document.body.appendChild(link);
+            link.click();
+        }
+
+        // Initialize the containers on page load
+        createTestContainers();
+    </script>
+</body>
+
+</html>

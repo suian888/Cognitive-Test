@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Interactive Line Drawing</title>
@@ -12,6 +13,10 @@
             justify-content: center;
             align-items: center;
             background: #f0f0f0;
+        }
+
+        #countdown {
+            font-size: 10rem;
         }
 
         #myCanvas {
@@ -43,19 +48,25 @@
 <body>
 
     <div id="imageContainer">
-        <img src="figure1.jpg" alt="Image 1">
-        <img src="figure2.jpg" alt="Image 2">
-        <img src="figure3.jpg" alt="Image 3">
+        <img src="figure1.png" alt="Image 1">
+        <img src="figure2.png" alt="Image 2">
+        <img src="figure3.png" alt="Image 3">
     </div>
 
     <div>
-        <canvas id="myCanvas" width="300" height="300"></canvas>
+        <canvas id="myCanvas" width="300" height="300" style="display:none"></canvas>
         <div id="controls">
-            <button onclick="clearCanvas()">Clear Lines</button>
-            <button id="continueButton" onclick="continueTest()">Continue</button>
-            <button id="downloadButton" style="display:none;" onclick="downloadCSV()">Download CSV</button>
+            <button id="clearButton" style="display:none" onclick="clearCanvas()">Clear Lines</button>
+            <button id="continueButton" style="display:none" onclick="continueTest()">Continue</button>
+            <button id="downloadButton" style="display:none" onclick="downloadCSV()">Download CSV</button>
         </div>
     </div>
+
+    <div>
+        <div id="countdown" style="display:none">02:00</div>
+        <button id="continueSectionButton" style="display:none" onclick="continueToNextSection()">Continue</button>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             // Variables for image display
@@ -76,6 +87,8 @@
                     setTimeout(showNextImage, 3000); // Call this function again in 3 seconds
                 } else {
                     imageContainer.style.display = 'none'; // Hide the image container after all images are shown
+                    continueButton.style.display = 'inline';
+                    clearButton.style.display = 'inline';
                     canvas.style.display = 'block'; // Show the canvas
                     controls.style.display = 'block'; // Show the controls
                 }
@@ -86,8 +99,14 @@
             const ctx = canvas.getContext('2d');
             const continueButton = document.getElementById('continueButton');
             const downloadButton = document.getElementById('downloadButton');
+            const countdown = document.getElementById('countdown');
+            const continueSectionButton = document.getElementById('continueSectionButton');
+
             let currentRound = 1;
             const maxRounds = 3;
+            let currentSection = 1;
+            const maxSections = 3;
+            let timeLeft = 60;
             let results = [];
 
             const lines = [
@@ -158,9 +177,48 @@
                     currentRound++;
                     clearCanvas();
                 } else {
-                    continueButton.style.display = 'none';
-                    downloadButton.style.display = 'inline';
+                    if (currentSection < maxSections) {
+                        currentRound = 1;
+                        myCanvas.style.display = 'none';
+                        controls.style.display = 'none';
+                        countdown.style.display = 'block';
+                        if (currentSection == 1) {
+                            timeLeft = 5;
+                        }
+                        else if (currentSection == 2) {
+                            timeLeft = 30;
+                        }
+                        clearCanvas();
+                    }
+                    else {
+                        continueButton.style.display = 'none';
+                        downloadButton.style.display = 'inline';
+                    }
                 }
+            }
+
+            const countdownTimer = setInterval(() => {
+                if (timeLeft <= 0) {
+                    clearInterval(countdownTimer);
+                    countdown.style.display = 'none';
+                    continueSectionButton.style.display = 'inline';
+                } else if (timeLeft > 0 && countdown.style.display == 'block') {
+                    const minutes = Math.floor(timeLeft / 60);
+                    const seconds = timeLeft % 60;
+                    countdown.textContent =
+                        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                    timeLeft--;
+                }
+            }, 1000);
+
+            function continueToNextSection() {
+                alert("Proceeding to the next section!");
+                currentSection++;
+                continueSectionButton.style.display = 'none';
+                continueButton.style.display = 'inline';
+                clearButton.style.display = 'inline';
+                canvas.style.display = 'block'; // Show the canvas
+                controls.style.display = 'block'; // Show the controls
             }
 
             function downloadCSV() {

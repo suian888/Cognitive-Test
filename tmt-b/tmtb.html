@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TMT-B Test</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', "Microsoft YaHei", "SimSun", Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #container {
+            width: 900px;
+            height: 600px;
+            position: relative;
+            border: 1px solid #ccc;
+        }
+
+        .circle {
+            width: 55px;
+            height: 55px;
+            background-color: lightblue;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            cursor: pointer;
+            font-size: 20px;
+            transition: background-color 0.3s;
+        }
+
+        .correct {
+            background-color: green !important;
+        }
+
+        .incorrect {
+            background-color: red !important;
+        }
+
+        #intro,
+        #startScreen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            z-index: 10;
+        }
+
+        #startBtn,
+        #proceedBtn {
+            font-family: 'Noto Sans SC', "Microsoft YaHei", "SimSun", Arial, sans-serif;
+            font-size: 16px;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="intro">
+        <h2>这是TMT-B测试</h2>
+        <h2>测试者需要按照1A2B3C的顺序点击圆圈</h2>
+        <button id="proceedBtn">继续</button>
+    </div>
+
+    <div id="startScreen" style="display:none;">
+        <h2>请点击任意位置开始测试</h2>
+    </div>
+
+    <h1>TMT-B Test</h1>
+    <div id="container">
+        <canvas id="mouseCanvas" width="900" height="600"></canvas>
+    </div>
+
+    <script>
+        let currentStep = 0;
+        let startTime;
+        let incorrectClicks = 0;
+        let mousePath = [];
+        const canvas = document.getElementById('mouseCanvas');
+        const ctx = canvas.getContext('2d');
+        const sequence = ['1', 'A', '2', 'B', '3', 'C', '4', 'D', '5', 'E', '6', 'F', '7', 'G', '8', 'H'];
+
+        document.getElementById('proceedBtn').addEventListener('click', () => {
+            document.getElementById('intro').style.display = 'none';
+            document.getElementById('startScreen').style.display = 'flex';
+        });
+
+        document.getElementById('startScreen').addEventListener('click', () => {
+            document.getElementById('startScreen').style.display = 'none';
+            generateCircles();
+        });
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function isOverlapping(x, y, circles) {
+            for (let i = 0; i < circles.length; i++) {
+                const circleX = circles[i].offsetLeft + circles[i].offsetWidth / 2;
+                const circleY = circles[i].offsetTop + circles[i].offsetHeight / 2;
+                const distance = Math.sqrt(Math.pow(x - circleX, 2) + Math.pow(y - circleY, 2));
+                if (distance < 120) return true;
+            }
+            return false;
+        }
+
+        function generateCircles() {
+            const container = document.getElementById('container');
+            const shuffledSequence = shuffle([...sequence]);
+
+            shuffledSequence.forEach(item => {
+                const circle = document.createElement('div');
+                circle.className = 'circle';
+                circle.textContent = item;
+
+                let x, y;
+                do {
+                    x = Math.random() * (container.clientWidth - 60);
+                    y = Math.random() * (container.clientHeight - 60);
+                } while (isOverlapping(x, y, document.querySelectorAll('.circle')));
+
+                circle.style.left = `${x}px`;
+                circle.style.top = `${y}px`;
+                circle.onclick = () => handleClick(item, circle);
+                container.appendChild(circle);
+            });
+        }
+
+        function handleClick(item, circle) {
+            if (item === sequence[currentStep]) {
+                document.querySelectorAll('.incorrect').forEach(incorrectCircle => {
+                    incorrectCircle.classList.remove('incorrect');
+                    incorrectCircle.style.backgroundColor = 'lightblue';
+                });
+
+                circle.classList.add('correct');
+
+                if (currentStep === 0) startTime = new Date().getTime(); // record start time
+                if (currentStep === sequence.length - 1) {
+                    const endTime = new Date();
+                    const totalTime = (endTime - startTime) / 1000;
+
+                    saveResultsAsCSV(totalTime, incorrectClicks);
+                    document.querySelectorAll('.circle').forEach(circle => circle.style.visibility = 'hidden');
+                }
+                currentStep += 1;
+            } else {
+                circle.classList.add('incorrect');
+                incorrectClicks += 1;
+            }
+        }
+
+        function saveResultsAsCSV(totalTime, incorrectClicks) {
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += `Completion Time,Incorrect Clicks\n${totalTime},${incorrectClicks}\n`;
+
+            csvContent += "x,y,time\n"; // add time column
+            mousePath.forEach(point => {
+                csvContent += `${point.x},${point.y},${point.time}\n`; // add time to csv
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "TMT-B_results.csv");
+            document.body.appendChild(link);
+            link.click();
+        }
+
+        canvas.addEventListener('mousemove', (event) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            const currentTime = new Date().getTime(); // get current timestamp
+            const time = (currentTime - startTime) / 1000; // record time
+            mousePath.push({ x, y, time });
+        });
+    </script>
+</body>
+
+</html>

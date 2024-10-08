@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Interactive Line Drawing</title>
+    <title>Figure Memory Test</title>
     <style>
         body,
         html {
@@ -64,7 +64,7 @@
 
     <div>
         <div id="countdown" style="display:none">02:00</div>
-        <button id="continueSectionButton" style="display:none" onclick="continueToNextSection()">Continue</button>
+        <button id="continueSectionButton" style="display:none" onclick="continueSection()">Continue</button>
     </div>
 
     <script>
@@ -182,12 +182,6 @@
                         myCanvas.style.display = 'none';
                         controls.style.display = 'none';
                         countdown.style.display = 'block';
-                        if (currentSection == 1) {
-                            timeLeft = 5;
-                        }
-                        else if (currentSection == 2) {
-                            timeLeft = 30;
-                        }
                         clearCanvas();
                     }
                     else {
@@ -211,14 +205,43 @@
                 }
             }, 1000);
 
-            function continueToNextSection() {
-                alert("Proceeding to the next section!");
+            function continueSection() {
+                // Inform the user about the section transition
+                //alert("Proceeding to the next section!");
+
+                // Move to the next section
                 currentSection++;
+
+                // Hide the 'Continue' section button
                 continueSectionButton.style.display = 'none';
-                continueButton.style.display = 'inline';
-                clearButton.style.display = 'inline';
-                canvas.style.display = 'block'; // Show the canvas
-                controls.style.display = 'block'; // Show the controls
+
+                // Check if there are more sections to continue
+                if (currentSection <= maxSections) {
+                    // Reset the relevant UI elements for the new section
+                    continueButton.style.display = 'inline';
+                    clearButton.style.display = 'inline';
+                    canvas.style.display = 'block'; // Show the canvas
+                    controls.style.display = 'block'; // Show controls
+
+                    // Reset the countdown and time based on the current section
+                    if (currentSection == 2) {
+                        timeLeft = 30;  // Adjust time for section 2
+                    } else if (currentSection == 3) {
+                        timeLeft = 60;  // Adjust time for section 3
+                    }
+
+                    // Restart the countdown (if applicable)
+                    countdown.style.display = 'block';
+                    startCountdown(); // Custom function to restart countdown logic
+
+                    // Clear the canvas and reset other states if necessary
+                    clearCanvas();
+                } else {
+                    // If there are no more sections, complete the process and hide controls
+                    continueButton.style.display = 'none';
+                    clearButton.style.display = 'none';
+                    alert("Test completed!");
+                }
             }
 
             function downloadCSV() {

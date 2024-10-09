@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 
 <head>
     <meta charset="UTF-8">
@@ -56,15 +56,15 @@
     <div>
         <canvas id="myCanvas" width="300" height="300" style="display:none"></canvas>
         <div id="controls">
-            <button id="clearButton" style="display:none" onclick="clearCanvas()">Clear Lines</button>
-            <button id="continueButton" style="display:none" onclick="continueTest()">Continue</button>
-            <button id="downloadButton" style="display:none" onclick="downloadCSV()">Download CSV</button>
+            <button id="clearButton" style="display:none" onclick="clearCanvas()">清空画布</button>
+            <button id="continueButton" style="display:none" onclick="continueTest()">继续</button>
+            <button id="downloadButton" style="display:none" onclick="downloadCSV()">下载CSV</button>
         </div>
     </div>
 
     <div>
-        <div id="countdown" style="display:none">02:00</div>
-        <button id="continueSectionButton" style="display:none" onclick="continueSection()">Continue</button>
+        <div id="countdown" style="display:none">00:05</div>
+        <button id="continueSectionButton" style="display:none" onclick="continueSection()">继续测试</button>
     </div>
 
     <script>
@@ -106,7 +106,7 @@
             const maxRounds = 3;
             let currentSection = 1;
             const maxSections = 3;
-            let timeLeft = 60;
+            let timeLeft = 5; //set time for section 1
             let results = [];
 
             const lines = [
@@ -181,7 +181,7 @@
                         currentRound = 1;
                         myCanvas.style.display = 'none';
                         controls.style.display = 'none';
-                        countdown.style.display = 'block';
+                        startCountdown();
                         clearCanvas();
                     }
                     else {
@@ -191,29 +191,30 @@
                 }
             }
 
-            const countdownTimer = setInterval(() => {
-                if (timeLeft <= 0) {
-                    clearInterval(countdownTimer);
-                    countdown.style.display = 'none';
-                    continueSectionButton.style.display = 'inline';
-                } else if (timeLeft > 0 && countdown.style.display == 'block') {
-                    const minutes = Math.floor(timeLeft / 60);
-                    const seconds = timeLeft % 60;
-                    countdown.textContent =
-                        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-                    timeLeft--;
-                }
-            }, 1000);
+            function startCountdown() {
+                countdown.style.display = 'block';
+                const countdownTimer = setInterval(() => {
+                    if (timeLeft <= 0) {
+                        clearInterval(countdownTimer);
+                        countdown.style.display = 'none';
+                        continueSectionButton.style.display = 'inline';
+                    } else if (timeLeft > 0 && countdown.style.display == 'block') {
+                        const minutes = Math.floor(timeLeft / 60);
+                        const seconds = timeLeft % 60;
+                        countdown.textContent =
+                            `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                        timeLeft--;
+                    }
+                }, 1000);
+            }
 
             function continueSection() {
-                // Inform the user about the section transition
-                //alert("Proceeding to the next section!");
-
                 // Move to the next section
                 currentSection++;
 
                 // Hide the 'Continue' section button
                 continueSectionButton.style.display = 'none';
+                countdown.style.display = 'none';
 
                 // Check if there are more sections to continue
                 if (currentSection <= maxSections) {
@@ -225,16 +226,10 @@
 
                     // Reset the countdown and time based on the current section
                     if (currentSection == 2) {
-                        timeLeft = 30;  // Adjust time for section 2
+                        timeLeft = 5;  // Adjust time for section 2
                     } else if (currentSection == 3) {
-                        timeLeft = 60;  // Adjust time for section 3
+                        timeLeft = 5;  // Adjust time for section 3
                     }
-
-                    // Restart the countdown (if applicable)
-                    countdown.style.display = 'block';
-                    startCountdown(); // Custom function to restart countdown logic
-
-                    // Clear the canvas and reset other states if necessary
                     clearCanvas();
                 } else {
                     // If there are no more sections, complete the process and hide controls
@@ -269,6 +264,7 @@
 
             window.clearCanvas = clearCanvas;
             window.continueTest = continueTest;
+            window.continueSection = continueSection;
             window.downloadCSV = downloadCSV;
         });
     </script>
